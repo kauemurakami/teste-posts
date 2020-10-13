@@ -8,12 +8,6 @@ class HomeController extends GetxController {
   HomeController({@required this.postRepository})
       : assert(postRepository != null);
 
-  @override
-  void onInit() {
-    getAllRepositories();
-    super.onInit();
-  }
-
   final _message = ''.obs;
   get message => this._message.value;
   set message(value) => this._message.value = value;
@@ -23,21 +17,36 @@ class HomeController extends GetxController {
   final repositorios = List<Posts>().obs;
   set repositorios(value) => this.repositorios.value = value;
 
+  @override
+  void onInit() {
+    getAllRepositories();
+    super.onInit();
+  }
+
+  final _countList = 0.obs;
+  get countList => this._countList.value;
+  set countList(value) => this._countList.value = value;
+
   onChangedFiltro(value) {
-    searchResults.clear();
     if (value.length > 3) {
       repositorios.forEach((post) {
         if (post.title.toLowerCase().contains(value.toLowerCase())) {
           searchResults.add(post);
-        } else {
-          getAllRepositories();
-          return;
         }
+        countList = searchResults.length;
         repositorios = searchResults;
       });
-    } else if (value.length < 1) {
+    }
+
+    if (countList == 0) {
+      this.message = 'Nenhum resultado encontrado';
+    }
+
+    if (value.length < 2) {
+      this.message = '';
+      searchResults.clear();
       getAllRepositories();
-      return;
+      countList = repositorios.length;
     }
   }
 
@@ -45,6 +54,9 @@ class HomeController extends GetxController {
   validateFiltro(value) => '';
 
   getAllRepositories() async {
-    await postRepository.getAllPosts().then((data) => repositorios = data);
+    await postRepository.getAllPosts().then((data) {
+      repositorios = data;
+      this.countList = repositorios.length;
+    });
   }
 }
